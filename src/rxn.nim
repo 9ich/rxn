@@ -16,8 +16,8 @@ var rs:RunningStat
 proc reset() =
 	state = WAIT; stime = now + initduration(rand(waitrange))
 	
-func median(a:openarray[float64]):float64 =	
-	try: a.sorted[a.len div 2] except: 0
+func median(a:openarray[float64]):float64 =
+	if a.len > 0: a.sorted[a.len div 2] else: 0
 		
 proc update() =
 	now = getmonotime()
@@ -38,7 +38,7 @@ proc update() =
 proc draw() =
 	let c = [0x000000ffu32,0x00ff00ff][state.int].getcolor
 	clearbackground(c)
-	let last = try: hist[^1] except: 0f64
+	let last = if hist.len > 0: hist[^1] else: 0f64
 	let fs = iswindowfullscreen().int
 	let s = &(
 		"{hist}\n"&
