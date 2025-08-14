@@ -2,7 +2,7 @@
 import std/[algorithm,monotimes,random,stats,strformat,strutils,times]
 import raylib
 
-type State = enum WAIT,FIRED,ACKED
+type State = enum WAIT,FIRED
 
 const waitrange = 1500000000i64..4000000000i64
 
@@ -31,15 +31,12 @@ proc update() =
 			if ack:
 				hist &= (now - stime).inmilliseconds.float64
 				rs.push(hist[^1])
-				state = ACKED
-				stime = now + initduration(milliseconds=100)
-		of ACKED:
-			if now >= stime: reset()
+				reset()
 	if iskeypressed(KeyboardKey.R): (hist.setlen(0); rs.clear(); reset())
 	if iskeypressed(KeyboardKey.F): togglefullscreen()
 	
 proc draw() =
-	let c = [0x000000ffu32,0x00ff00ff,0x0000ffff][state.int].getcolor
+	let c = [0x000000ffu32,0x00ff00ff][state.int].getcolor
 	clearbackground(c)
 	let last = try: hist[^1] except: 0f64
 	let fs = iswindowfullscreen().int
