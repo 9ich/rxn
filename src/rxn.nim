@@ -39,10 +39,8 @@ proc update() =
 	if iskeypressed(KeyboardKey.F): togglefullscreen()
 	
 proc draw() =
-	clearbackground(case state:
-		of WAIT:  0x000000ffu32.getcolor
-		of FIRED: 0x00ff00ffu32.getcolor
-		of ACKED: 0x0000ffffu32.getcolor)
+	let c = [0x000000ffu32,0x00ff00ff,0x0000ffff][state.int].getcolor
+	clearbackground(c)
 	let last = try: hist[^1] except: 0f64
 	let fs = iswindowfullscreen().int
 	let s = &(
