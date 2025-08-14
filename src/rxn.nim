@@ -62,7 +62,7 @@ proc main() =
 	defer: closewindow()
 	setexitkey(KeyboardKey.Q)
 	settargetfps(999999)
-	const fd = slurp("TerminusTTFWindows-4.49.3.ttf")
+	const fd = slurp("terminusmin.ttf")
 	fon = loadfontfrommemory(".ttf", cast[seq[uint8]](fd), 24, 127)
 	randomize(); reset()
 	while not windowshouldclose(): (update(); draw())
