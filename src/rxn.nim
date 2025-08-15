@@ -22,7 +22,7 @@ func median(a:openarray[float64]):float64 =
 proc update() =
 	now = getmonotime()
 	let ack = ismousebuttonpressed(LEFT) or iskeypressed(SPACE) or
-		iskeypressed(KeyboardKey.W)
+		iskeypressed(W)
 	case state:
 		of WAIT:
 			if now >= stime: (state = FIRED; stime = now)
@@ -32,8 +32,8 @@ proc update() =
 				hist &= (now - stime).inmilliseconds.float64
 				rs.push(hist[^1])
 				reset()
-	if iskeypressed(KeyboardKey.R): (hist.setlen(0); rs.clear(); reset())
-	if iskeypressed(KeyboardKey.F): togglefullscreen()
+	if iskeypressed(R): (hist.setlen(0); rs.clear(); reset())
+	if iskeypressed(F): togglefullscreen()
 	
 proc draw() =
 	let c = [0x000000ffu32,0x00ff00ff][state.int].getcolor
@@ -56,11 +56,11 @@ proc draw() =
 	enddrawing()
 
 proc main() =
-	setconfigflags(Flags[ConfigFlags](FullscreenMode))
+	setconfigflags(flags(FullscreenMode))
 	let m = getcurrentmonitor()
 	initwindow(m.getmonitorwidth, m.getmonitorheight, "rxn")
 	defer: closewindow()
-	setexitkey(KeyboardKey.Q)
+	setexitkey(Q)
 	settargetfps(999999)
 	const fd = slurp("terminusmin.ttf")
 	fon = loadfontfrommemory(".ttf", cast[seq[uint8]](fd), 24, 127)
