@@ -14,29 +14,29 @@ var hist = newseqofcap[float64](20)
 var rs:RunningStat
 
 proc reset() =
-	state = WAIT; stime = now + initduration(rand waitrange)
+	state = WAIT; stime = now + waitrange.rand.initduration
 	
-func median(a:openarray[float64]):float64 =
+func median[T](a:openarray[T]):T =
 	if a.len > 0: a.sorted[a.len div 2] else: 0
 		
 proc update() =
 	now = getmonotime()
-	let ack = ismousebuttonpressed(LEFT) or iskeypressed(SPACE) or
+	let click = ismousebuttonpressed(LEFT) or iskeypressed(SPACE) or
 			iskeypressed(W)
 	case state:
-		of WAIT:
-			if now >= stime: (state = FIRED; stime = now)
-			elif ack:        reset()
-		of FIRED:
-			if ack:
-				hist &= (now - stime).inmilliseconds.float64
-				rs.push(hist[^1])
-				reset()
-	if iskeypressed(R): (hist.setlen(0); rs.clear(); reset())
-	if iskeypressed(F): togglefullscreen()
+	of WAIT:
+		if click:          (reset())
+		elif now >= stime: (state = FIRED; stime = now)
+	of FIRED:
+		if click:
+			hist &= (now - stime).inmilliseconds.float64
+			rs.push hist[^1]
+			reset()
+	if iskeypressed(R): (hist.setlen 0; rs.clear(); reset())
+	if iskeypressed(F): (togglefullscreen())
 	
 proc draw() =
-	clearbackground([0x000000ffu32,0x00ff00ff][state.int].getcolor)
+	clearbackground [0x000000ffu32,0x00ff00ff][state.int].getcolor
 	let last = if hist.len > 0: hist[^1] else: 0f64
 	let fs = iswindowfullscreen().int
 	let s = &(
@@ -50,18 +50,18 @@ proc draw() =
 		"\nf:fullscreen[{fs}] r:reset q:quit\n"
 	)
 	begindrawing()
-	drawtext(fon, s, Vector2(x:4,y:100), fon.basesize.float32, 1,
-			0xffffffffu32.getcolor)
+	drawtext fon, s, Vector2(x:4,y:100), fon.basesize.float32, 1,
+			0xffffffffu32.getcolor
 	enddrawing()
 
 proc main() =
-	setconfigflags(flags FullscreenMode)
+	setconfigflags flags(FullscreenMode)
 	let m = getcurrentmonitor()
-	initwindow(m.getmonitorwidth, m.getmonitorheight, "rxn")
+	initwindow m.getmonitorwidth, m.getmonitorheight, "rxn"
 	defer: closewindow()
-	const fd = slurp("terminusmin.ttf")
+	const fd = slurp "terminusmin.ttf"
 	fon = loadfontfrommemory(".ttf", cast[seq[uint8]](fd), 24, 127)
-	setexitkey(Q); settargetfps(999999)
+	setexitkey Q; settargetfps 999999
 	randomize(); reset()
 	while not windowshouldclose(): (update(); draw())
 main()
