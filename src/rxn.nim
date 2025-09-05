@@ -1,5 +1,5 @@
 #? replace(sub="\t",by="    ")
-import std/[algorithm,monotimes,random,stats,sequtils,strformat,strutils,sugar,
+import std/[algorithm,monotimes,random,stats,sequtils,strformat,strutils,
 	syncio,times]
 import raylib
 
