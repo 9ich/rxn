@@ -2,7 +2,7 @@
 import std/[algorithm,monotimes,random,stats,strformat,strutils,times]
 import raylib
 
-type State = enum WAIT,FIRED
+type State = enum WAIT,FIRED,PAUSED
 
 const waitrange = 1500000000i64..4000000000i64
 
@@ -21,24 +21,27 @@ func median[T](a:openarray[T]):T =
 		
 proc update() =
 	now = getmonotime()
-	let click = ismousebuttonpressed(LEFT) or iskeypressed(SPACE) or
-			iskeypressed(W)
+	let click = ismousebuttonpressed(LEFT) or iskeypressed(W)
 	case state:
 	of WAIT:
-		if click:          (reset())
-		elif now >= stime: (state = FIRED; stime = now)
+		if iskeypressed(SPACE): state = PAUSED
+		elif click:             (reset())
+		elif now >= stime:      ((state,stime) = (FIRED,now))
 	of FIRED:
 		if click:
-			hist &= (now - stime).inmilliseconds.float64
+			hist &= (now - stime).inmilliseconds.float
 			rs.push hist[^1]
 			reset()
+	of PAUSED:
+		if iskeypressed(SPACE): (reset())
 	if iskeypressed(R): (hist.setlen 0; rs.clear(); reset())
 	if iskeypressed(F): (togglefullscreen())
 	
 proc draw() =
-	clearbackground [0x000000ffu32,0x00ff00ff][state.int].getcolor
+	clearbackground [0x000000ffu32,0x00ff00ff,0x100000ff][state.int].getcolor
 	let last = if hist.len > 0: hist[^1] else: 0f64
 	let fs = iswindowfullscreen().int
+	let p = ["pause","PAUSED"][(state == PAUSED).int]
 	let s = &(
 		"{hist}\n"&
 		"last   {last:3} ms\n"&
@@ -47,7 +50,7 @@ proc draw() =
 		"median {hist.median:3} ms\n"&
 		"mean   {rs.mean:3} ms\n"&
 		"sd     {rs.standarddeviation:3} ms\n"&
-		"\nf:fullscreen[{fs}] r:reset q:quit\n"
+		"\nspace:{p} f:fullscreen[{fs}] r:reset q:quit\n"
 	)
 	begindrawing()
 	drawtext fon, s, Vector2(x:4,y:100), fon.basesize.float32, 1,
