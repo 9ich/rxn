@@ -1,5 +1,5 @@
 #? replace(sub="\t",by="    ")
-import std/[algorithm,monotimes,random,stats,sequtils,strformat,strutils,
+import std/[algorithm,os,monotimes,random,stats,sequtils,strformat,strutils,
 	syncio,times]
 import raylib
 
@@ -18,12 +18,8 @@ var msgq = newseqofcap[Msg] 1
 
 proc msg(s:string) = msgq.add((now,s))
 proc msgupdate() =   msgq = msgq.filterit(now < it.t + initduration(seconds=2))
-
-proc reset() =
-	state = WAIT; stime = now + waitrange.rand.initduration
-
-func median[T](a:openarray[T]):T =
-	if a.len > 0: a.sorted[a.len div 2] else: 0
+proc reset() =       (state,stime) = (WAIT,now + waitrange.rand.initduration)
+func median[T](a:openarray[T]):T = (if a.len > 0: a.sorted[a.len div 2] else: 0)
 
 proc statmsg():string {.inline.} =
 	let last = if hist.len > 0: hist[^1] else: 0f64
@@ -48,7 +44,7 @@ proc update() =
 	let click = ismousebuttonpressed(LEFT) or iskeypressed(W)
 	case state:
 	of WAIT:
-		if iskeypressed(SPACE): state = PAUSED
+		if iskeypressed(SPACE): (state = PAUSED)
 		elif click:             (reset())
 		elif now >= stime:      ((state,stime) = (FIRED,now))
 	of FIRED:
@@ -56,15 +52,17 @@ proc update() =
 			hist &= (now - stime).inmilliseconds.float
 			rs.push hist[^1]
 			reset()
+		elif iskeypressed(SPACE): (state = PAUSED)
 	of PAUSED:
-		if iskeypressed(SPACE): (reset())
+		if iskeypressed(SPACE): (settargetfps 999999; reset())
+		else:                   (settargetfps 60)
 	if iskeypressed(D): (dump())
 	if iskeypressed(F): (togglefullscreen())
 	if iskeypressed(R): (hist.setlen 0; rs.clear(); reset())
 
 proc draw() =
-	clearbackground [0x000000ffu32,0x00ff00ff,0x100000ff][state.int].getcolor
 	begindrawing()
+	clearbackground [0x000000ffu32,0x00ff00ff,0x100000ff][state.int].getcolor
 	let p = ["pause","PAUSED"][(state == PAUSED).int]
 	let fs = iswindowfullscreen().int
 	var s = &("{statmsg()}\nspace:{p} d:dump f:fullscreen[{fs}] r:reset"&
